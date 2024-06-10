@@ -72,7 +72,7 @@ async function getAccessTokenAndShares(initDataLine) {
         }
     } catch (error) {
         console.error(`\rLỗi gì đó: ${error}`);
-        return { accessToken: null, energy: null, boostReady: null, energyReady: null };
+        return { accessToken: null, energy: null, boostReady: null, energyReady: null, code: 9 };
     }
 
     return { accessToken: null, energy: null, boostReady: null, energyReady: null };
@@ -285,57 +285,23 @@ async function upgradeLevel(headers, upgrade_type) {
 }
 // set current timestamp
 async function submitTaps(token, content_id, time_stamp, config ) {
+    let isTurbo = false;
+    let tempTurboCount = token.boostReady;
     while (true) {
-        let isTurbo = false;
         const url = "https://api.tapswap.ai/api/player/submit_taps";
-        if(config.booster == true && token.boostReady > 0){
-            if (token.boostReady > 0) {
-                if (Date.now() - turboTime > 25000) {
-                    console.log("\x1b[37m\x1b[1mTurbo boost đã sẵn sàng, đang áp dụng turbo boost\x1b[0m");
-                    const activeTubor = await applyTurboBoost(token.accessToken, false);
-                    if (activeTubor) {
-                        turboTime = Date.now();
-                        isTurbo = true;
-                    }
-                } else {
-                    console.log("\x1b[37m\x1b[1mTurbo đã kích hoạt\x1b[0m");
+        if(config.booster == true && tempTurboCount > 0 ){
+            if ((Date.now() - turboTime > 21000 && tempTurboCount > 0) || isTurbo == false){
+                console.log("\x1b[37m\x1b[1mTurbo boost đã sẵn sàng, đang áp dụng turbo boost\x1b[0m");
+                const activeTubor = await applyTurboBoost(token.accessToken, false);
+                if (activeTubor) {
+                    tempTurboCount = tempTurboCount - 1;
+                    turboTime = Date.now();
+                    isTurbo = true;
                 }
-            }
+            } else {
+                console.log("\x1b[37m\x1b[1mTurbo đã kích hoạt hoặc không thể kích hoạtt\x1b[0m");
+            } 
         }
-        // if (use_booster == true) {
-        //     if (boost_ready > 0) {
-        //         //25s
-        //         if (Date.now() - turboTime > 25000) {
-        //             console.log("\x1b[37m\x1b[1mTurbo boost đã sẵn sàng, đang áp dụng turbo boost\x1b[0m");
-        //             const activeTubor = await applyTurboBoost(token.accessToken, false);
-        //             if (activeTubor) {
-        //                 turboTime = Date.now();
-        //             }
-        //         } else {
-        //             console.log("\x1b[37m\x1b[1mTurbo đã kích hoạt\x1b[0m");
-        //         }
-        //     }
-        // }
-
-        // if (energy < 50) {
-        //     console.log("\x1b[31m\x1b[1mNăng lượng thấp\x1b[0m");
-        //     if (use_booster == true) {
-        //         if (Date.now() - turboTime > 25000) {
-        //             if (energy_ready > 0) {
-        //                 console.log("\x1b[37m\x1b[1mEnergy boost đã sẵn sàng, đang áp dụng energy boost\x1b[0m");
-        //                 const rs = await applyEnergyBoost(access_token);
-        //                 // cekEnergy = 100;
-        //             }
-        //         }
-        //     } else {
-        //         await new Promise(resolve => setTimeout(resolve, 3000));
-        //         console.log("\x1b[31m\x1b[1mChuyển sang tài khoản tiếp theo\x1b[0m");
-        //         return;
-        //         access_token, energy, boost_ready = getAccessTokenAndShares(init_data_line);
-        //     }
-        // } else {
-        //     console.log("\x1b[37m\x1b[1mĐang nhấn ...\x1b[0m");
-        // }
 
         const headers = {
             "Accept": "*/*",
@@ -360,38 +326,46 @@ async function submitTaps(token, content_id, time_stamp, config ) {
         const totalTaps = isTurbo ? 100000 : 10000;
         const payload = { "taps": totalTaps, "time": parseInt(time_stamp) };
             if (isTurbo) {
-                for (let i = 0; i < 20; i++) {
-                    process.stdout.write(`\r\x1b[37m\x1b[1mTapping Turbo${'.'.repeat(i % 4)}\x1b[0m`);
+                let coin = token.data.player.shares;
+                while (isTurbo){
                     try {
                         const response = await axios.post(url, payload, { headers });
                         if (response.status === 201) {
-                            console.log("\x1b[32m\x1b[1mĐã nhấn\x1b[0m");
+                            coin = response.data.player.shares;
+                            console.log("\x1b[32m\x1b[1mĐã nhấn với Tubor Boost\x1b[0m");
                         } else {
                             console.log("\x1b[31m\x1b[1mGửi nhấn thất bại, mã trạng thái: " + response.status + "\x1b[0m");
                         }
                     } catch (error) {
                         console.error("\x1b[31m\x1b[1mLỗi khi gửi yêu cầu:\x1b[0m", error);
                     }
-                    if (turboTime < Date.now()) {
+                    if (Date.now() - turboTime > 21000) {
+                        console .log("\x1b[37m\x1b[1mTurbo boost đã hết hiệu lực\x1b[0m");
+                        console.log("Coin: "+ coin);
                         isTurbo = false;
                     }
                 }
-            } else{
+            } else {
                 try {
                     const response = await axios.post(url, payload, { headers });
                     if (response.status === 201) {
                         console.log("\x1b[32m\x1b[1mĐã nhấn\x1b[0m");
                         console.log(response.data.player.boost);
+                        console.log("Coin: "+ response.data.player.shares);
                          if(
-                             response.data.player.energy < 50 && response.data.player.boost.find(b => b.type === "energy").cnt > 0
+                            response.data.player.energy < 50 && response.data.player.boost.find(b => b.type === "energy").cnt > 0 && isTurbo == false
                          ){
-                            // const rs = await applyEnergyBoost(token.accessToken);
-                            // if(rs){
-                            //     console.log("Boost năng lượng đã được kích hoạt");
-                            // }
+                            const rs = await applyEnergyBoost(token.accessToken);
+                            if(rs){
+                                console.log("Boost năng lượng đã được kích hoạt");
+                            }
+                            await new Promise(resolve => setTimeout(resolve, 1000));
                          } else {
                             console.log("Không đủ năng lượng hoặc không có boost năng lượng");
-                            // next acccount
+                            console.log("Coin: "+ response.data.player.shares);
+                            console.log("\x1b[31m\x1b[1mCHUYỂN ACCOUNT SAU 3S\x1b[0m");
+                            await new Promise(resolve => setTimeout(resolve, 3000));
+                            return {status: "success", code: 5, data: response.data.player.shares}
                          } 
                     } else {
                         console.log("\x1b[31m\x1b[1mGửi nhấn thất bại, mã trạng thái: " + response.status + "\x1b[0m");
@@ -402,11 +376,6 @@ async function submitTaps(token, content_id, time_stamp, config ) {
             }
     }
 }
-
-
-
-
-
 
 
 //main
@@ -434,9 +403,13 @@ async function main() {
         } 
         else {
             console.log("Không thể lấy token")
-            break;
+            //continue to next account
+            continue;
         }
     }
-
+    
+    console.log("\x1b[35m\x1b[1mCHẠY LẠI SAU 300S\x1b[0m");
+    await new Promise(resolve => setTimeout(resolve, 300000));
+    main();
 }
 main();

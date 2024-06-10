@@ -1,0 +1,9 @@
+{
+  "name": "tapswap-main",
+  "version": "1.0.0",
+  "description": "TapSwap By Tin Tin",
+  "author": "Tin Tin Dev",
+  "dependencies": {
+    "axios": "^1.7.2"
+  }
+}
