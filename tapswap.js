@@ -365,7 +365,7 @@ async function submitTaps(token, content_id, time_stamp, config ) {
                             console.log("Coin: "+ response.data.player.shares);
                             console.log("\x1b[31m\x1b[1mCHUYỂN ACCOUNT SAU 3S\x1b[0m");
                             await new Promise(resolve => setTimeout(resolve, 3000));
-                            return {status: "success", code: 5, data: response.data.player.shares}
+                            return {status: "success", code: 5, coin: response.data.player.shares}
                          } 
                     } else {
                         console.log("\x1b[31m\x1b[1mGửi nhấn thất bại, mã trạng thái: " + response.status + "\x1b[0m");
