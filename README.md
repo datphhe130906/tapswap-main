@@ -12,7 +12,7 @@ Install with python
 
 ```bash
   1. Download Python 3.10+
-  2. Install Module (pip install requests colorama)
+  2. Install Module (npm i)
   3. Use Resource Overide or alternative tools to open the bot on PC (Telegram Web)
   4. Get the Query ID and CHR in the network request Login (payload section) put it in url.txt format chr|queryid
   5. Tap tap ingame to be able to request submitTaps. Take the contentId (in the header) and time (in the payload) and put it in the contentId.txt the content|time format
