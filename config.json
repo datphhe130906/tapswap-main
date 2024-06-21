@@ -1,4 +1,6 @@
 {
     "upgrade": false,
-    "booster": true
+    "booster": true,
+    "claim": true,
+    "kyc": true
 }
